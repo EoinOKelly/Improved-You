@@ -21,7 +21,7 @@ public class Main {
         }
 
         int goalAmmount = 0;
-        if(optionDW.equals("D") || optionDW.equals("d")){
+        if(optionDW.equalsIgnoreCase("D")){
             System.out.print("\nHow many daily goals would you like to set? ");
             goalAmmount = input.nextInt();
         }
