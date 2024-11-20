@@ -5,14 +5,41 @@ public class Main {
     public static void main(String[] args) {
         Scanner input = new Scanner(System.in);
 
-        System.out.print("Welcome to \"ImprovedYou\", would you like to sign in or sign up? [I/U] ");
-        String optionIU = input.nextLine();
-        String[] newAccount = new String[2];
+        System.out.println("Welcome to \"ImprovedYou\"");
+        AccountManager accountManager = new AccountManager();
 
-        if(optionIU.equalsIgnoreCase("U")){
-            newAccount = signUp();
+        String username = "";
+        String password = "";
+
+        while (true) {
+            System.out.print("\nPick an option:\n1. Sign Up\n2. Sign In\n");
+            String optionIU = input.nextLine();
+            switch (optionIU) {
+                case "1":
+                    System.out.print("Enter username: ");
+                    username = input.nextLine();
+                    System.out.print("Enter password: ");
+                    password = input.nextLine();
+                    accountManager.addAccount(username, password);
+                    break;
+                case "2":
+                    System.out.print("Enter username: ");
+                    username = input.nextLine();
+                    System.out.print("Enter password: ");
+                    password = input.nextLine();
+
+                    if (accountManager.validateLogin(username, password)) {
+                        System.out.println("Login successful!");
+                    } else {
+                        System.out.println("Invalid username or password.");
+                    }
+                    break;
+                default:
+                    System.out.println("Invalid option. Please try again.");
+            }
         }
-        System.out.printf("%nWelcome %s%nWould you like to set a daily or weekly goal? [D/W] ", newAccount[0]);
+
+        System.out.printf("%nWelcome %s%nWould you like to set a daily or weekly goal? [D/W] ", username);
         String optionDW = input.nextLine();
 
         while(!optionDW.equalsIgnoreCase("D") & !optionDW.equalsIgnoreCase("W")){
@@ -49,18 +76,5 @@ public class Main {
             }
         }
         System.out.printf("You have met %d/%d results", yTracker, goalAmmount);
-    }
-
-    public static String[] signUp(){
-        Scanner input = new Scanner(System.in);
-        String[] account = new String[2];
-
-        System.out.print("Please input an account name: ");
-        String name = input.nextLine();
-        System.out.print("Please input a password: ");
-        String password = input.nextLine();
-        account[0] = name;
-        account[1] = password;
-        return account;
     }
 }
