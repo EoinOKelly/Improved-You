@@ -1,8 +1,6 @@
-/*import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.HashMap;
+import java.util.Map;
 
 class Account {
     String username;
@@ -15,145 +13,102 @@ class Account {
 }
 
 public class AccountManager {
+    private static final String DB_URL = "jdbc:sqlite:C:/Users/eoino/SQLite/improved_you_databasee.db"; // Adjust path as needed
     private HashMap<String, Account> accounts = new HashMap<>();
 
+    // Constructor initializes the database connection and table
+    public AccountManager() {
+        createTableIfNotExists();
+    }
+
+    // Create table if not exists
+    private void createTableIfNotExists() {
+        String createTableSQL = "CREATE TABLE IF NOT EXISTS accounts (username TEXT PRIMARY KEY, password TEXT)";
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             Statement stmt = conn.createStatement()) {
+            stmt.execute(createTableSQL);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Add account both in-memory and in the database
     public void addAccount(String username, String password) {
-        if (accounts.containsKey(username)) {
+        // Check if account exists in memory or database
+        if (accounts.containsKey(username) || accountExistsInDatabase(username)) {
             System.out.println("Account already exists!");
             return;
         }
+
+        // Add to in-memory HashMap
         accounts.put(username, new Account(username, password));
-        System.out.println("Account added successfully!");
+
+        // Insert into database
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             PreparedStatement pstmt = conn.prepareStatement("INSERT INTO accounts (username, password) VALUES (?, ?)")) {
+            pstmt.setString(1, username);
+            pstmt.setString(2, password);
+            pstmt.executeUpdate();
+            System.out.println("Account added successfully!");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
-    public Account getAccount(String username) {
-        return accounts.get(username);
-    }
-
+    // Validate login credentials
     public boolean validateLogin(String username, String password) {
+        // First check in-memory accounts
         Account account = accounts.get(username);
         if (account != null && account.password.equals(password)) {
             return true;
         }
-        return false;
-    }
-}
 
-public class SaveHashMapToDB {
-    private static final String DB_URL = "jdbc:mysql://localhost:3306/your_database";
-    private static final String USERNAME = "your_username";
-    private static final String PASSWORD = "your_password";
-
-        saveHashMapToDatabase(myHashMap);
+        // Then check the database
+        return validateLoginInDatabase(username, password);
     }
 
-    public static void saveHashMapToDatabase(HashMap<String, String> hashMap) {
-        // SQL INSERT statement
-        String insertQuery = "INSERT INTO hashmap_data (map_key, map_value) VALUES (?, ?)";
-
-        try (Connection conn = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);
-             PreparedStatement pstmt = conn.prepareStatement(insertQuery)) {
-
-            // Iterate through the hashmap and insert each key-value pair
-            for (Map.Entry<String, String> entry : hashMap.entrySet()) {
-                pstmt.setString(1, entry.getKey());
-                pstmt.setString(2, entry.getValue());
-                pstmt.addBatch(); // Add to batch for efficiency
-            }
-
-            // Execute batch insert
-            pstmt.executeBatch();
-            System.out.println("HashMap data saved to database successfully!");
-
+    // Check if account exists in the database
+    private boolean accountExistsInDatabase(String username) {
+        String query = "SELECT COUNT(*) FROM accounts WHERE username = ?";
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+            pstmt.setString(1, username);
+            ResultSet rs = pstmt.executeQuery();
+            return rs.getInt(1) > 0;
         } catch (SQLException e) {
             e.printStackTrace();
+            return false;
         }
     }
-}*/
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
-
-// Account class to represent user accounts
-class Account {
-    String username;
-    String password;
-
-    public Account(String username, String password) {
-        this.username = username;
-        this.password = password;
-    }
-}
-
-// AccountManager class to manage accounts
-class AccountManager {
-    private HashMap<String, Account> accounts = new HashMap<>();
-
-    public void addAccount(String username, String password) {
-        if (accounts.containsKey(username)) {
-            System.out.println("Account already exists!");
-            return;
+    // Validate login from the database
+    private boolean validateLoginInDatabase(String username, String password) {
+        String query = "SELECT * FROM accounts WHERE username = ? AND password = ?";
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             PreparedStatement pstmt = conn.prepareStatement(query)) {
+            pstmt.setString(1, username);
+            pstmt.setString(2, password);
+            ResultSet rs = pstmt.executeQuery();
+            return rs.next();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
         }
-        accounts.put(username, new Account(username, password));
-        System.out.println("Account added successfully!");
     }
 
-    public Account getAccount(String username) {
-        return accounts.get(username);
-    }
-
-    public boolean validateLogin(String username, String password) {
-        Account account = accounts.get(username);
-        return account != null && account.password.equals(password);
-    }
-
-    public HashMap<String, Account> getAllAccounts() {
-        return accounts;
-    }
-}
-
-// Main class to integrate AccountManager and database operations
-public class SaveHashMapToDB {
-    private static final String DB_URL = "jdbc:mysql://localhost:3306/your_database"; // Replace with your DB URL
-    private static final String USERNAME = "your_username"; // Replace with your DB username
-    private static final String PASSWORD = "your_password"; // Replace with your DB password
-
-    public static void main(String[] args) {
-        // Initialize the AccountManager and add some accounts
-        AccountManager accountManager = new AccountManager();
-        accountManager.addAccount("user1", "password1");
-        accountManager.addAccount("user2", "password2");
-
-        // Save accounts to the database
-        saveAccountsToDatabase(accountManager.getAllAccounts());
-    }
-
-    public static void saveAccountsToDatabase(HashMap<String, Account> accounts) {
-        // SQL INSERT statement
-        String insertQuery = "INSERT INTO accounts (username, password) VALUES (?, ?)";
-
-        try (Connection conn = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);
-             PreparedStatement pstmt = conn.prepareStatement(insertQuery)) {
-
-            // Iterate through the accounts hashmap and insert each account
-            for (Map.Entry<String, Account> entry : accounts.entrySet()) {
-                Account account = entry.getValue();
-                pstmt.setString(1, account.username);
-                pstmt.setString(2, account.password);
-                pstmt.addBatch(); // Add to batch for efficiency
+    // Load all accounts from the database to in-memory HashMap (if necessary)
+    public void loadAccountsFromDatabase() {
+        String query = "SELECT * FROM accounts";
+        try (Connection conn = DriverManager.getConnection(DB_URL);
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(query)) {
+            while (rs.next()) {
+                String username = rs.getString("username");
+                String password = rs.getString("password");
+                accounts.put(username, new Account(username, password));
             }
-
-            // Execute batch insert
-            pstmt.executeBatch();
-            System.out.println("Accounts saved to database successfully!");
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 }
-
