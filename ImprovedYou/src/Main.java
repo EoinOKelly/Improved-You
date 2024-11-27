@@ -14,30 +14,36 @@ public class Main {
         while (true) {
             System.out.print("\nPick an option:\n1. Sign Up\n2. Sign In\n");
             String optionIU = input.nextLine();
-            switch (optionIU) {
-                case "1":
-                    System.out.print("Enter username: ");
-                    username = input.nextLine();
-                    System.out.print("Enter password: ");
-                    password = input.nextLine();
-                    accountManager.addAccount(username, password);
-                    break;
-                case "2":
-                    System.out.print("Enter username: ");
-                    username = input.nextLine();
-                    System.out.print("Enter password: ");
-                    password = input.nextLine();
 
-                    if (accountManager.validateLogin(username, password)) {
-                        System.out.println("Login successful!");
-                    } else {
-                        System.out.println("Invalid username or password.");
-                    }
-                    break;
-                default:
+            if (optionIU.equals("1")) {
+                System.out.print("Enter username: ");
+                username = input.nextLine();
+                System.out.print("Enter password: ");
+                password = input.nextLine();
+                accountManager.addAccount(username, password);
+                break;
+            }
+
+            else if (optionIU.equals("2")) {
+                System.out.print("Enter username: ");
+                username = input.nextLine();
+                System.out.print("Enter password: ");
+                password = input.nextLine();
+
+                if (accountManager.validateLogin(username, password)) {
+                    System.out.println("Login successful!");
+                } else {
+                    System.out.println("Invalid username or password.");
+                }
+                break;
+            }
+
+            else {
                     System.out.println("Invalid option. Please try again.");
             }
         }
+
+
 
         System.out.printf("%nWelcome %s%nWould you like to set a daily or weekly goal? [D/W] ", username);
         String optionDW = input.nextLine();
